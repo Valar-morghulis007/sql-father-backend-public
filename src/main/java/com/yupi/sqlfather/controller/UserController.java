@@ -32,7 +32,6 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 用户接口
  *
- * @author https://github.com/liyupi
  */
 @RestController
 @RequestMapping("/user")
@@ -40,8 +39,6 @@ public class UserController {
 
     @Resource
     private UserService userService;
-
-    // region 登录相关
 
     /**
      * 用户注册
@@ -114,10 +111,6 @@ public class UserController {
         BeanUtils.copyProperties(user, userVO);
         return ResultUtils.success(userVO);
     }
-
-    // endregion
-
-    // region 增删改查
 
     /**
      * 创建用户
@@ -244,6 +237,4 @@ public class UserController {
         userVOPage.setRecords(userVOList);
         return ResultUtils.success(userVOPage);
     }
-
-    // endregion
 }
