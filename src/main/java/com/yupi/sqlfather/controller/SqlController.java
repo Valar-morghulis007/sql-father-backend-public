@@ -31,7 +31,6 @@ import org.springframework.web.multipart.MultipartFile;
 /**
  * SQL 相关接口
  *
- * @author https://github.com/liyupi
  */
 @RestController
 @RequestMapping("/sql")
