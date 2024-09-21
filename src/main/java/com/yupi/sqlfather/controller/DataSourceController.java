@@ -4,13 +4,12 @@ import com.yupi.sqlfather.common.BaseResponse;
 import com.yupi.sqlfather.model.dto.DBInfoRequest;
 import com.yupi.sqlfather.model.dto.DataSourceDto;
 import com.yupi.sqlfather.service.impl.DataSourceService;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * @author morghulis
@@ -25,16 +24,28 @@ public class DataSourceController {
     @Autowired
     private DataSourceService dataSourceService;
 
-    @PostMapping("/connect")
-    public String tryConnect(@RequestBody DataSourceDto dataSourceDto) throws SQLException {
-        dataSourceService.tryConnect(dataSourceDto.getIp(),dataSourceDto.getPort(),dataSourceDto.getDatabase(),
-                dataSourceDto.getUsername(),dataSourceDto.getPassword());
-        return "success";
+    @GetMapping("/connect")
+    public BaseResponse<Boolean> testConnect(@Param("id") String id)
+            throws SQLException {
+        return dataSourceService.testConnect(id);
     }
 
     @PostMapping("/add")
     public BaseResponse<Integer> addDB(@RequestBody DBInfoRequest dbInfoRequest) {
         return dataSourceService.save(dbInfoRequest);
+    }
+
+    @GetMapping("/get/tables")
+    public BaseResponse<List> getTables(@RequestParam("id") String id) throws SQLException {
+        return dataSourceService.getTables(id);
+    }
+
+    @GetMapping("/get/columns")
+    public BaseResponse<List> getColumns(@RequestParam("id") String id,
+                                         @RequestParam("dbName") String dbName,
+                                         @RequestParam("tableName") String tableName)
+            throws SQLException {
+        return dataSourceService.getColumns(id, dbName, tableName);
     }
 
 

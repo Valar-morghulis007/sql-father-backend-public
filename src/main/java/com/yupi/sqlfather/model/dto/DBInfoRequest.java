@@ -1,5 +1,6 @@
 package com.yupi.sqlfather.model.dto;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
@@ -18,6 +19,8 @@ public class DBInfoRequest {
     private String dbType;
     private String ip;
     private String port;
+    private String username;
+    private String password;
     /**
      * 创建时间
      */

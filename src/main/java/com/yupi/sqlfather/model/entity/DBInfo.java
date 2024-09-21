@@ -28,6 +28,10 @@ public class DBInfo {
     private String ip;
     @TableField("port")
     private String port;
+    @TableField("username")
+    private String username;
+    @TableField("password")
+    private String password;
     /**
      * 创建时间
      */
