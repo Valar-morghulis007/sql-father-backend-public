@@ -29,7 +29,7 @@ public class TableSchema {
     /**
      * 模拟数据条数
      */
-    private Integer mockNum;
+    private Long mockNum;
 
     /**
      * 列信息列表

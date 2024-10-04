@@ -41,7 +41,7 @@ public class GeneratorFacade {
         SqlBuilder sqlBuilder = new SqlBuilder();
         // 构造建表 SQL
         String createSql = sqlBuilder.buildCreateTableSql(tableSchema);
-        int mockNum = tableSchema.getMockNum();
+        int mockNum = Math.toIntExact(tableSchema.getMockNum());
         // 生成模拟数据
         List<Map<String, Object>> dataList = DataBuilder.generateData(tableSchema, mockNum);
         // 生成插入 SQL
@@ -80,10 +80,10 @@ public class GeneratorFacade {
         if (StringUtils.isBlank(tableName)) {
             throw new SchemaException("表名不能为空");
         }
-        Integer mockNum = tableSchema.getMockNum();
+        Integer mockNum = Math.toIntExact(tableSchema.getMockNum());
         // 默认生成 20 条
         if (tableSchema.getMockNum() == null) {
-            tableSchema.setMockNum(20);
+            tableSchema.setMockNum(20L);
             mockNum = 20;
         }
         if (mockNum > 100 || mockNum < 10) {
