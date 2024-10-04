@@ -97,8 +97,8 @@ public class GenerateDataService {
 
     public boolean importDb(String id, String dbName, String tableName) {
         String filePath = filePathPrefix + File.separator + tableName;
-        File file = new File(filePath);
-        File[] files = file.listFiles();
+        File folderFile = new File(filePath);
+        File[] files = folderFile.listFiles();
         boolean result = false;
         DBInfo dbInfo = dataSourceUtil.getDbInfo(id);
         String url = DataSourceUtil.getURL(dbInfo.getIp(), dbInfo.getPort(), dbInfo.getDbName());
@@ -117,8 +117,8 @@ public class GenerateDataService {
                 }
             }
             String fields = fieldNames.stream().collect(Collectors.joining(","));
-            for (File file1 : files) {
-                String path = Paths.get(filePathPrefix, tableName, file1.getName()).toString();
+            for (File file : files) {
+                String path = Paths.get(filePathPrefix, tableName, file.getName()).toString();
                 path = path.replace("\\", "\\\\");
                 StringBuffer sbSql = new StringBuffer();
                 sbSql.append("LOAD DATA LOCAL INFILE '")
@@ -138,6 +138,6 @@ public class GenerateDataService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return result;
+        return !result;
     }
 }
