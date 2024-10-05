@@ -41,4 +41,4 @@ file:
 
 data:
   mock:
-    num: 100000
+    num: "100000"

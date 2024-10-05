@@ -16,14 +16,11 @@ import com.yupi.sqlfather.core.schema.TableSchema.Field;
 import com.yupi.sqlfather.exception.BusinessException;
 import com.yupi.sqlfather.model.entity.Dict;
 import com.yupi.sqlfather.service.DictService;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+
+import java.util.*;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -46,7 +43,7 @@ public class DataBuilder {
         // 初始化结果数据
         List<Map<String, Object>> resultList = new ArrayList<>(rowNum);
         for (int i = 0; i < rowNum; i++) {
-            resultList.add(new HashMap<>());
+            resultList.add(new TreeMap<>());
         }
         // 依次生成每一列
         for (Field field : fieldList) {

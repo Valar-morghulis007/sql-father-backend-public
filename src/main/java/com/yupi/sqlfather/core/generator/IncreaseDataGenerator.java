@@ -1,8 +1,10 @@
 package com.yupi.sqlfather.core.generator;
 
 import com.yupi.sqlfather.core.schema.TableSchema.Field;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -19,10 +21,11 @@ public class IncreaseDataGenerator implements DataGenerator {
         if (StringUtils.isBlank(mockParams)) {
             mockParams = "1";
         }
-        int initValue = Integer.parseInt(mockParams);
+        long initValue = Long.parseLong(mockParams);
         for (int i = 0; i < rowNum; i++) {
             list.add(String.valueOf(initValue + i));
         }
+        field.setMockParams(String.valueOf(Long.parseLong(mockParams) + rowNum));
         return list;
     }
 }

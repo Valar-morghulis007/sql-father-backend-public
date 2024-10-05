@@ -38,44 +38,44 @@ public class GenerateDataService {
     private String filePathPrefix;
 
     @Value("${data.mock.num}")
-    private Integer mockNum;
+    private String mockNum;
 
     @Autowired
     private DataSourceUtil dataSourceUtil;
 
 
     public List<Map<String, Object>> generateData(TableSchema tableSchema) {
+        Integer mockNumInt=Integer.parseInt(mockNum);
         List<Map<String, Object>> resultList = new ArrayList<>();
         long mockNumTotal = tableSchema.getMockNum();
-        if (mockNumTotal < mockNum) {
-            mockNum = (int) mockNumTotal;
-        }
         while (mockNumTotal > 0) {
-            List<Map<String, Object>> dataList = DataBuilder.generateData(tableSchema, mockNum);
-            resultList.addAll(dataList);
-            mockNumTotal -= mockNum;
-            if (mockNumTotal < 0) {
-                mockNum = (int) mockNumTotal;
+            if (mockNumTotal < mockNumInt) {
+                mockNumInt = (int) mockNumTotal;
             }
+            List<Map<String, Object>> dataList = DataBuilder.generateData(tableSchema, mockNumInt);
+            resultList.addAll(dataList);
+            mockNumTotal -= mockNumInt;
         }
         return resultList;
     }
 
     public boolean generateFile(TableSchema tableSchema) {
+        Integer mockNumInt=Integer.parseInt(mockNum);
         long mockNumTotal = tableSchema.getMockNum();
         String filePath = filePathPrefix + tableSchema.getTableName();
         if (!new File(filePath).exists()) {
             FileUtil.mkdir(new File(filePath));
         }
-        if (mockNumTotal < mockNum) {
-            mockNum = (int) mockNumTotal;
-        }
-        int count = 1;
+        int count = 0;
         while (mockNumTotal > 0) {
             String filePathAbsolute = filePath + File.separator + tableSchema.getTableName() + "_" + count
                     + CommonConstant.FILE_NAME_SUFFIX_BIN;
+            if (mockNumTotal < mockNumInt) {
+                mockNumInt = (int) mockNumTotal;
+            }
+
             // 生成模拟数据
-            List<Map<String, Object>> dataList = DataBuilder.generateData(tableSchema, mockNum);
+            List<Map<String, Object>> dataList = DataBuilder.generateData(tableSchema, mockNumInt);
             try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
                     new FileOutputStream(filePathAbsolute), "UTF8"))) {
                 for (Map<String, Object> map : dataList) {
@@ -86,10 +86,7 @@ public class GenerateDataService {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            mockNumTotal -= mockNum;
-            if (mockNumTotal < 0) {
-                mockNum = (int) mockNumTotal;
-            }
+            mockNumTotal -= mockNumInt;
             count++;
         }
         return true;
@@ -110,11 +107,7 @@ public class GenerateDataService {
             ResultSet resultSet = stmt.executeQuery(columnsNameSQL);
             List<String> fieldNames = new ArrayList<>();
             while (resultSet.next()) {
-                String columnKey = resultSet.getString("COLUMN_KEY");
-                String extra = resultSet.getString("EXTRA");
-                if (!"PRI".equals(columnKey) && !"auto_increment".equals(extra)) {
-                    fieldNames.add(resultSet.getString("COLUMN_NAME"));
-                }
+                fieldNames.add(resultSet.getString("COLUMN_NAME"));
             }
             String fields = fieldNames.stream().collect(Collectors.joining(","));
             for (File file : files) {
