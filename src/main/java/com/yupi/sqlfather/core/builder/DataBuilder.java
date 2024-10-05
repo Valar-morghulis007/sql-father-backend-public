@@ -43,7 +43,7 @@ public class DataBuilder {
         // 初始化结果数据
         List<Map<String, Object>> resultList = new ArrayList<>(rowNum);
         for (int i = 0; i < rowNum; i++) {
-            resultList.add(new TreeMap<>());
+            resultList.add(new LinkedHashMap<>());
         }
         // 依次生成每一列
         for (Field field : fieldList) {
