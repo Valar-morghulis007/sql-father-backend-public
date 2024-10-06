@@ -1,23 +1,16 @@
 package com.yupi.sqlfather.service.impl;
 
 import cn.hutool.core.io.FileUtil;
-import com.fasterxml.jackson.databind.deser.std.MapEntryDeserializer;
-import com.yupi.sqlfather.common.BaseResponse;
-import com.yupi.sqlfather.common.ResultUtils;
 import com.yupi.sqlfather.constant.CommonConstant;
 import com.yupi.sqlfather.core.builder.DataBuilder;
 import com.yupi.sqlfather.core.schema.TableSchema;
 import com.yupi.sqlfather.model.entity.DBInfo;
-import com.yupi.sqlfather.model.vo.FieldVO;
 import com.yupi.sqlfather.utils.DataSourceUtil;
-import io.swagger.models.auth.In;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.*;
 import java.util.ArrayList;

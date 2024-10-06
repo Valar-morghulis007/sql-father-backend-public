@@ -8,6 +8,8 @@ import com.yupi.sqlfather.mapper.DBInfoMapper;
 import com.yupi.sqlfather.model.dto.DBInfoRequest;
 import com.yupi.sqlfather.model.entity.DBInfo;
 import com.yupi.sqlfather.model.vo.FieldVO;
+import com.yupi.sqlfather.utils.DataSourceUtil;
+import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.DataSourceBuilder;
@@ -32,7 +34,7 @@ public class DataSourceService {
     @Autowired
     private DBInfoMapper dbInfoMapper;
 
-    public BaseResponse<Integer> save(DBInfoRequest dbInfoRequest) {
+    public int save(DBInfoRequest dbInfoRequest) {
         if (dbInfoRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -44,54 +46,70 @@ public class DataSourceService {
         if (result == null) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR);
         }
-        return ResultUtils.success(result);
+        return result;
     }
 
-    public BaseResponse<Boolean> testConnect(String id) throws SQLException {
-        Connection connection = getConnection(id);
-        if (connection != null) {
-            return ResultUtils.success(true);
-        } else {
-            return ResultUtils.error(00001, "数据库连接失败");
-        }
-    }
-
-    public BaseResponse<List> getTables(String id) throws SQLException {
+    public boolean testConnect(String id) throws SQLException {
         DBInfo dbInfo = getDbInfo(id);
-        Connection connection = getConnection(id);
-        String tablesSQL = String.format("SELECT table_name FROM information_schema.tables WHERE table_schema ='%s'", dbInfo.getDbName());
-        PreparedStatement preparedStatement = connection.prepareStatement(tablesSQL);
-        ResultSet resultSet = preparedStatement.executeQuery();
-        List<String> tables = new ArrayList<>();
-        while (resultSet.next()) {
-            tables.add(resultSet.getString(1));
+        String url = DataSourceUtil.getURL(dbInfo.getIp(), dbInfo.getPort(), dbInfo.getDbName());
+        try (Connection conn = DriverManager.getConnection(url, dbInfo.getUsername(), dbInfo.getPassword());
+             Statement stmt = conn.createStatement()) {
+            String tablesSQL = String.format("SELECT VERSION() AS version;");
+            ResultSet resultSet = stmt.executeQuery(tablesSQL);
+            if (resultSet != null) {
+                return true;
+            }
+        } catch (Exception e) {
+            throw new BusinessException(50000, "测试连接失败");
         }
-        return ResultUtils.success(tables);
+        return false;
     }
 
-    public BaseResponse<List> getColumns(String id, String dbName, String tableName) throws SQLException {
-        Connection connection = getConnection(id);
-        String columnsSQL = String.format(
-                "SELECT COLUMN_NAME,COLUMN_TYPE,COLUMN_DEFAULT,IS_NULLABLE,COLUMN_COMMENT,COLUMN_KEY,EXTRA " +
-                        "FROM INFORMATION_SCHEMA.COLUMNS " +
-                        "WHERE TABLE_SCHEMA = '%s' AND TABLE_NAME = '%s';", dbName, tableName);
-        PreparedStatement preparedStatement = connection.prepareStatement(columnsSQL);
-        ResultSet resultSet = preparedStatement.executeQuery();
-        List<FieldVO> fieldVOS = new ArrayList<>();
-        while (resultSet.next()) {
-            FieldVO fieldVO = new FieldVO();
-            fieldVO.setFieldName(resultSet.getString("COLUMN_NAME"));
-            fieldVO.setFieldType(resultSet.getString("COLUMN_TYPE"));
-            fieldVO.setDefaultValue(resultSet.getString("COLUMN_DEFAULT"));
-            boolean notNull = resultSet.getString("IS_NULLABLE").equals("YES") ? false : true;
-            fieldVO.setNotNull(notNull);
-            fieldVO.setComment(resultSet.getString("COLUMN_COMMENT"));
-            boolean primaryKey = resultSet.getString("COLUMN_KEY").equals("PRI") ? true : false;
-            fieldVO.setPrimaryKey(primaryKey);
-            fieldVO.setOnUpdate(resultSet.getString("EXTRA"));
-            fieldVOS.add(fieldVO);
+    public List getTables(String id) throws SQLException {
+        DBInfo dbInfo = getDbInfo(id);
+        List<String> tables = new ArrayList<>();
+        String url = DataSourceUtil.getURL(dbInfo.getIp(), dbInfo.getPort(), dbInfo.getDbName());
+        try (Connection conn = DriverManager.getConnection(url, dbInfo.getUsername(), dbInfo.getPassword());
+             Statement stmt = conn.createStatement()) {
+            String tablesSQL = String.format("SELECT table_name FROM information_schema.tables WHERE table_schema ='%s'", dbInfo.getDbName());
+            ResultSet resultSet = stmt.executeQuery(tablesSQL);
+            while (resultSet.next()) {
+                tables.add(resultSet.getString("table_name"));
+            }
+        } catch (Exception e) {
+            throw new BusinessException(40000, "获取表列表失败");
         }
-        return ResultUtils.success(fieldVOS);
+        return tables;
+    }
+
+    public List getColumns(String id, String dbName, String tableName) throws SQLException {
+        DBInfo dbInfo = getDbInfo(id);
+        List<FieldVO> fieldVOs = new ArrayList<>();
+        String url = DataSourceUtil.getURL(dbInfo.getIp(), dbInfo.getPort(), dbInfo.getDbName());
+        try (Connection conn = DriverManager.getConnection(url, dbInfo.getUsername(), dbInfo.getPassword());
+             Statement stmt = conn.createStatement()) {
+            String columnsSQL = String.format(
+                    "SELECT COLUMN_NAME,COLUMN_TYPE,COLUMN_DEFAULT,IS_NULLABLE,COLUMN_COMMENT,COLUMN_KEY,EXTRA " +
+                            "FROM INFORMATION_SCHEMA.COLUMNS " +
+                            "WHERE TABLE_SCHEMA = '%s' AND TABLE_NAME = '%s';", dbName, tableName);
+            ResultSet resultSet = stmt.executeQuery(columnsSQL);
+            while (resultSet.next()) {
+                FieldVO fieldVO = new FieldVO();
+                fieldVO.setFieldName(resultSet.getString("COLUMN_NAME"));
+                fieldVO.setFieldType(resultSet.getString("COLUMN_TYPE"));
+                fieldVO.setDefaultValue(resultSet.getString("COLUMN_DEFAULT"));
+                boolean notNull = resultSet.getString("IS_NULLABLE").equals("YES") ? false : true;
+                fieldVO.setNotNull(notNull);
+                fieldVO.setComment(resultSet.getString("COLUMN_COMMENT"));
+                boolean primaryKey = resultSet.getString("COLUMN_KEY").equals("PRI") ? true : false;
+                fieldVO.setPrimaryKey(primaryKey);
+                fieldVO.setOnUpdate(resultSet.getString("EXTRA"));
+                fieldVOs.add(fieldVO);
+            }
+        } catch (Exception e) {
+            throw new BusinessException(40000, "获取表字段信息失败");
+        }
+        return fieldVOs;
     }
 
     private DBInfo getDbInfo(String id) {
@@ -101,22 +119,4 @@ public class DataSourceService {
         }
         return dbInfo;
     }
-
-    private Connection getConnection(String id) throws SQLException {
-        DBInfo dbInfo = dbInfoMapper.selectById(id);
-        String url = String.format("jdbc:mysql://%s:%s/%s", dbInfo.getIp(), dbInfo.getPort(), dbInfo.getDbName());
-        DataSource dataSource = DataSourceBuilder.create()
-                .driverClassName("com.mysql.cj.jdbc.Driver")
-                .url(url)
-                .username(dbInfo.getUsername())
-                .password(dbInfo.getPassword())
-                .build();
-        Connection connection = dataSource.getConnection();
-        if (connection == null) {
-            throw new BusinessException(00002, "数据库连接失败");
-        }
-        return connection;
-    }
-
-
 }

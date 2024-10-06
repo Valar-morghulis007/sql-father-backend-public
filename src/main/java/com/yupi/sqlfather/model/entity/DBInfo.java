@@ -1,7 +1,8 @@
 package com.yupi.sqlfather.model.entity;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.alibaba.excel.annotation.format.DateTimeFormat;
+import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.math.BigInteger;
@@ -13,40 +14,71 @@ import java.util.Date;
  * @Description:
  * @date 2024/9/19 22:52
  */
-@TableName(value ="db_info")
+@TableName(value = "db_info")
 @Data
 public class DBInfo {
-    @TableField("id")
+    /**
+     * 表ID，自增主键
+     */
+    @TableId(value = "id", type = IdType.NONE)
     private Long id;
-    @TableField("name")
+
+    /**
+     * 数据库别名
+     */
+    @TableField(value = "name")
     private String name;
-    @TableField("db_name")
+
+    /**
+     * 数据库名称
+     */
+    @TableField(value = "db_name")
     private String dbName;
-    @TableField("db_type")
+
+    /**
+     * 数据库类型
+     */
+    @TableField(value = "db_type")
     private String dbType;
-    @TableField("ip")
+
+    /**
+     * 数据库IP
+     */
+    @TableField(value = "ip")
     private String ip;
-    @TableField("port")
+
+    /**
+     * 数据库端口
+     */
+    @TableField(value = "port")
     private String port;
-    @TableField("username")
+    /**
+     * 数据库用户
+     */
+    @TableField(value = "username")
     private String username;
-    @TableField("password")
+
+    /**
+     * 数据库密码
+     */
+    @TableField(value = "password")
     private String password;
+
     /**
      * 创建时间
      */
-    @TableField("create_time")
+    @TableField(value = "create_time", fill = FieldFill.INSERT)
     private Date createTime;
 
     /**
      * 更新时间
      */
-    @TableField("update_time")
+    @TableField(value = "update_time", fill = FieldFill.INSERT_UPDATE)
     private Date updateTime;
 
     /**
      * 是否删除
      */
-    @TableField("is_delete")
+    @TableField(value = "is_delete")
     private Integer isDelete;
 }
